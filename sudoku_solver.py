@@ -9,8 +9,6 @@ class sudokuSolver:
             for col in range(9):
                 if (self.board[row][col] == 0):
                     self.legal_numbers[(row,col)] = set(i for i in range(1,10))
-                else:
-                    self.legal_numbers[(row,col)] =  set()
         self.removeIllegalNumbers()
 
     #Find the numbers used in that row and remove them from the legal number dict
@@ -18,25 +16,46 @@ class sudokuSolver:
         seen = set()
         for i in range(9):
             seen.add(self.board[row][i])
+        seen.remove(0)
         for key in self.legal_numbers:
-            if (key[0] != row):
+            if (key[0] > row):
                 break
-            self.legal_numbers[key] = self.legal_numbers[key]-seen
+            if (key[0] == row):
+                self.legal_numbers[key] = self.legal_numbers[key]-seen
 
     #Find the numbers used in that col and remove them from the legal number dict
     def removeIllegalNumbersCol(self,col):
-        pass
+        seen = set()
+        for i in range(9):
+            seen.add(self.board[i][col])
+        seen.remove(0)
+        for key in self.legal_numbers:
+            if (key[1] == col):
+                self.legal_numbers[key] = self.legal_numbers[key]-seen
 
     #Find the numbers used in that box and remove them from the legal number dict
-    def removeIllegalNumbersBox(self):
-        pass
+    def removeIllegalNumbersBox(self,row,col):
+        start_row = 3 * (row // 3)
+        start_col = 3 * (col // 3)
+        seen = set()
+        for current_row in range(start_row, start_row + 3):
+            for current_col in range(start_col, start_col + 3):
+                seen.add(board[current_row][current_col])
+        seen.remove(0)
+        for current_row in range(start_row, start_row + 3):
+            for current_col in range(start_col, start_col + 3):
+                key = (current_row,current_col)
+                if (key in self.legal_numbers):
+                    self.legal_numbers[key] = self.legal_numbers[key]-seen
 
     #Update the legal moves dict to have the new values
     def removeIllegalNumbers(self):
         for i in range(9):
             self.removeIllegalNumbersRow(i)
             self.removeIllegalNumbersCol(i)
-            self.removeIllegalNumbersBox()
+        for row in range(0,9,3):
+            for col in range(0,9,3):
+                self.removeIllegalNumbersBox(row,col)
                 
     #See if the num in a specific row
     def checkRow(self,row,num):
@@ -111,5 +130,5 @@ if __name__ == '__main__':
         [0, 4, 9, 2, 0, 6, 0, 0, 7]
     ]
     solver = sudokuSolver(board)
-    for row in solver.solveSudoku():
-        print(row)
+    for key,value in list(solver.legal_numbers.items()):
+        print(key,value)
