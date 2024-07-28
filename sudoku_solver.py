@@ -39,12 +39,23 @@ class sudokuBoard:
     def checkLegalCell(self,row,col,num):
         return self.checkRow(row,num) and self.checkCol(col,num) and self.checkBlock(row,col,num)
     
-class sudokuSolver:
+class LegalValues:
     def __init__(self,board):
         self.puzzle = board
         self.legal_numbers = {}
         self.positions_available = []
         self.initializeLegalNumbers()
+
+    #Conjugate Pair Learned from https://www.sudokuwiki.org/Naked_Candidates
+    def removeDuplicateLegalNumbers(self):
+        '''
+        Find pair/triplet with the same legal values that are also in the same row, col, or block
+        After finding the pair/triplet use it with set difference? to remove legals values in that row 
+        that also share the pair/triplet values.
+        Cell (0,0) Legal Values (1,2) and Cell (0,1) Legal Values (1,2)
+        remove all values in the same row that contains 1 or 2 or both.
+        '''
+        pass
 
     def initializeLegalNumbers(self):
         #Assume the board is completely empty board every cell can be between 1 and 9
@@ -127,6 +138,30 @@ class sudokuSolver:
         if (0 in seen): 
             seen.remove(0)
         return seen
+    
+class sudokuHints(LegalValues):
+    def __init__(self,board):
+        super().__init__(board)
+        self.puzzle = board
+
+    def obviousTuple(self):
+        pass
+
+    def getHint(self):
+        row,col = self.positions_available[0]
+        if len(self.legal_numbers[(row,col)]) == 1:
+            self.positions_available.pop(0)
+            return row,col,self.legal_numbers[(row,col)]
+        return self.obviousTuple()
+
+    def applyHint(self):
+        row,col,val = self.getHint()
+        self.puzzle.updateBoardValue(row,col,val)
+    
+class sudokuSolver(LegalValues):
+    def __init__(self,board):
+        super().__init__(board)
+        self.puzzle = board
 
     def solveSudoku(self):
         return self.solveSudokuHelper()
@@ -151,30 +186,21 @@ class sudokuSolver:
             self.positions_available.insert(0,(row,col))
             return None
         
-def readFile(path):
-    with open(path, "rt") as f:
-        return f.read()
-    
 #if __name__ == '__main__': copied from https://www.geeksforgeeks.org/what-does-the-if-__name__-__main__-do/
 if __name__ == '__main__':
-    boards = []
-        
-    for filename in os.listdir('boards'):
-        if filename.endswith('.txt'):
-            pathToFile = f'boards/{filename}'
-            fileContents = readFile(pathToFile)
-            current_board = []
-            for row in fileContents.splitlines():
-                board = []
-                for i in row.split(' '):
-                    board.append(int(i))
-                current_board.append(board)
-            boards.append(current_board)
+    board = [[6,0,0,1,3,2,4,0,9],
+             [7,3,4,0,0,0,0,6,0],
+             [2,1,0,0,6,0,0,0,8],
+             [9,0,6,8,0,0,0,4,5],
+             [8,5,1,3,0,0,7,0,0],
+             [0,0,0,2,0,0,0,0,1],
+             [0,0,0,4,0,0,0,0,3],
+             [3,4,0,9,0,5,0,8,0],
+             [1,9,0,6,8,0,0,5,0]]
 
-    for board in boards:
-        start = time.time()
-        sudoku_board = sudokuBoard(board)
-        solver = sudokuSolver(sudoku_board)
-        solved_board = solver.solveSudoku()
-        end = time.time()
-        print(end-start)
+    start = time.time()
+    sudoku_board = sudokuBoard(board)
+    solver = sudokuSolver(sudoku_board)
+    solved_board = solver.solveSudoku()
+    end = time.time()
+    print(end-start)
