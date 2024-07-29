@@ -15,16 +15,16 @@ class sudokuBoard:
         self.board[row][col] = 0
 
     def checkRow(self,row,num):
-        for val in self.board[row]:
-            if val == num:
-                return False
-        return True
+        for col in range(len(self.board[row])):
+            if self.board[col] == num:
+                return False,row,col
+        return True,-1,-1
     
     def checkCol(self,col,num):
-        for current_row in self.board:
-            if current_row[col] == num:
-                return False
-        return True
+        for row in range(len(self.board)):
+            if self.board[row][col] == num:
+                return False,row,col
+        return True,-1,-1
         
     def checkBlock(self,row,col,num):
         start_row = 3 * (row // 3)
@@ -32,12 +32,12 @@ class sudokuBoard:
         for current_row in range(start_row, start_row + 3):
             for current_col in range(start_col, start_col + 3):
                 if self.board[current_row][current_col] == num:
-                    return False
-        return True
+                    return False,current_row,current_col
+        return True,-1,-1
     
     #Check if the number can be placed in the current row and col
     def checkLegalCell(self,row,col,num):
-        return self.checkRow(row,num) and self.checkCol(col,num) and self.checkBlock(row,col,num)
+        return self.checkRow(row,num)[0] and self.checkCol(col,num)[0] and self.checkBlock(row,col,num)[0]
     
 class LegalValues:
     def __init__(self,board):
@@ -151,8 +151,8 @@ class sudokuHints(LegalValues):
         row,col = self.positions_available[0]
         if len(self.legal_numbers[(row,col)]) == 1:
             self.positions_available.pop(0)
+            self.initializeLegalNumbers()
             return row,col,self.legal_numbers[(row,col)]
-        return self.obviousTuple()
 
     def applyHint(self):
         row,col,val = self.getHint()
