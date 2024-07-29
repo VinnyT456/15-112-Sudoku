@@ -1,5 +1,6 @@
 from cmu_graphics import *
 from sudoku_solver import *
+from difficulty_screen import app
 from PIL import Image
 import math
 import copy
@@ -14,7 +15,7 @@ def readFile(path):
 def getBoards(difficulty):
     boards = []
     for filename in os.listdir('boards'):
-        if filename.endswith('.txt') and filename.startswith(f'{difficulty}'):
+        if filename.endswith('.txt') and filename.startswith(f'{difficulty.lower()}'):
             pathToFile = f'boards/{filename}'
             fileContents = readFile(pathToFile)
             current_board = []
@@ -32,7 +33,7 @@ def initializeBoard(app):
         current_row = [] 
         for col in range(9):
             if (app.user_board.getBoardValue(row,col) != 0):
-                current_row.append('skyBlue')
+                current_row.append(rgb(192,214,232))
             else:
                 current_row.append(None)
         app.board_color.append(current_row)
@@ -45,18 +46,26 @@ def resetBoardLayout(app):
 
 #Copied from TP Resources Image Demos
 def gameScreen_onAppStart(app):
+    app.current_difficulty = app.difficulty if (app.difficulty != '') else 'evil'
     app.cellSelected = (None,None)
-    app.rows = 9
-    app.cols = 9
+    app.rows = app.cols = 9
     app.cellBorderWidth = 1
-    app.boardWidth = 790
-    app.boardHeight = 790
-    app.boardLeft = 5
-    app.boardTop = 5
-    app.board = getBoards('easy')
+    app.boardWidth = app.boardHeight = 790
+    app.boardLeft = app.boardTop = 5
+    app.board = getBoards(app.current_difficulty)
     app.solved_board = sudokuSolver(sudokuBoard(copy.deepcopy(app.board))).solveSudoku()
     app.user_board = sudokuBoard(copy.deepcopy(app.board))
+    app.legal_values = LegalValues(app.user_board)
     initializeBoard(app)
+
+def gameScreen_onScreenActivate(app):
+    if (app.current_difficulty != app.difficulty and app.difficulty != ''): 
+        app.current_difficulty = app.difficulty
+        app.board = getBoards(app.current_difficulty)
+        app.solved_board = sudokuSolver(sudokuBoard(copy.deepcopy(app.board))).solveSudoku()
+        app.user_board = sudokuBoard(copy.deepcopy(app.board))
+        app.legal_values = LegalValues(app.user_board)
+        initializeBoard(app)
 
 def cellSelected(app,x,y):
     cellWidth,cellHeight = getCellSize(app)
@@ -88,6 +97,15 @@ def getCellLeftTop(app,row,col):
     cellTop = app.boardTop + row * cellHeight
     return (cellLeft, cellTop)
 
+def checkCell(app,row,col):
+    cell_number = app.user_board.getBoardValue(row,col)
+    if (cell_number != app.solved_board[row][col] and cell_number != 0):
+        app.board_color[row][col] = 'red'
+    elif (app.board[row][col] == cell_number and app.board[row][col] != 0):
+        app.board_color[row][col] = 'skyBlue'
+    else:
+        app.board_color[row][col] = None
+
 def drawCell(app,row,col):
     cellWidth,cellHeight = getCellSize(app)
     cellLeft,cellTop = getCellLeftTop(app,row,col)
@@ -95,27 +113,36 @@ def drawCell(app,row,col):
     drawRect(cellLeft, cellTop, cellWidth, cellHeight,
             fill=app.board_color[row][col], border='black',
             borderWidth=app.cellBorderWidth)
+    checkCell(app,row,col)
     if (cell_number != 0):
         drawLabel(f'{cell_number}',cellLeft+44,cellTop+44,size=50)
+    
 
 def drawGrid(app):
     for row in range(app.rows):
         for col in range(app.cols): 
             drawCell(app,row,col)
 
+def drawLegal(app,row,col):
+    if ((row,col) not in app.legal_values.legal_numbers):
+        return 
+
 def gameScreen_onKeyPress(app,key):
     row,col = app.cellSelected
     if (key == 'escape'):
         setActiveScreen('mainScreen')
     if (key == 'backspace' and (row,col) != (None,None)):
-        app.board.clearBoardValue(row,col)
+        app.user_board.clearBoardValue(row,col)
+        app.board_color[row][col] = None
     if (key.isdigit() and (row,col) != (None,None)):
-        if (1 <= int(key) <= 9):
+        key = int(key)
+        if (1 <= key <= 9):
             app.user_board.updateBoardValue(row,col,key)
+            checkCell(app,row,col)
+            app.legal_values.initializeLegalNumbers()
     if (key == 'r'):
-        app.board = sudokuBoard(getBoards('easy'))
-        initializeBoard(app)
-        
+        reset(app)
+
 def drawBorder(app):
     drawRect(0,0,app.width,app.height,fill=None,border='black',borderWidth=10)
     cellWidth,cellHeight = getCellSize(app)
@@ -126,6 +153,16 @@ def drawBorder(app):
         cellLeft,cellTop = getCellLeftTop(app,start_row,start_col)
         drawRect(cellLeft,cellTop,cellWidth*3,cellHeight*3,fill=None,border='black',borderWidth=5)
 
+def reset(app):
+    app.board = getBoards(app.current_difficulty)
+    app.solved_board = sudokuSolver(sudokuBoard(copy.deepcopy(app.board))).solveSudoku()
+    app.user_board = sudokuBoard(copy.deepcopy(app.board))
+    app.legal_values = LegalValues(app.user_board)
+    initializeBoard(app)
+
 def gameScreen_redrawAll(app):
     drawGrid(app)
     drawBorder(app)
+    for key,val in app.legal_values.legal_numbers.items():
+        print(f"{key} | {val}")
+    print("________________________")
