@@ -56,6 +56,7 @@ def gameScreen_onAppStart(app):
     app.solved_board = sudokuSolver(sudokuBoard(copy.deepcopy(app.board))).solveSudoku()
     app.user_board = sudokuBoard(copy.deepcopy(app.board))
     app.legal_values = LegalValues(app.user_board)
+    app.auto = False
     initializeBoard(app)
 
 def gameScreen_onScreenActivate(app):
@@ -114,6 +115,8 @@ def drawCell(app,row,col):
             fill=app.board_color[row][col], border='black',
             borderWidth=app.cellBorderWidth)
     checkCell(app,row,col)
+    if (app.auto):
+        drawLegal(app,row,col)
     if (cell_number != 0):
         drawLabel(f'{cell_number}',cellLeft+44,cellTop+44,size=50)
     
@@ -126,6 +129,13 @@ def drawGrid(app):
 def drawLegal(app,row,col):
     if ((row,col) not in app.legal_values.legal_numbers):
         return 
+    if (app.user_board.getBoardValue(row,col) != 0):
+        return 
+    cellLeft,cellTop = getCellLeftTop(app,row,col)
+    legals = app.legal_values.legal_numbers[(row,col)]
+    for i in range(1,10):
+        if i in legals: 
+            drawLabel(i,cellLeft+13+(30*((i-1)%3)),cellTop+15+(30*((i-1)//3)),size=20)
 
 def gameScreen_onKeyPress(app,key):
     row,col = app.cellSelected
@@ -134,12 +144,15 @@ def gameScreen_onKeyPress(app,key):
     if (key == 'backspace' and (row,col) != (None,None)):
         app.user_board.clearBoardValue(row,col)
         app.board_color[row][col] = None
+        app.legal_values.initializeLegalNumbers()
     if (key.isdigit() and (row,col) != (None,None)):
         key = int(key)
         if (1 <= key <= 9):
             app.user_board.updateBoardValue(row,col,key)
             checkCell(app,row,col)
             app.legal_values.initializeLegalNumbers()
+    if (key == 'm'):
+        app.auto = not app.auto
     if (key == 'r'):
         reset(app)
 
@@ -163,6 +176,3 @@ def reset(app):
 def gameScreen_redrawAll(app):
     drawGrid(app)
     drawBorder(app)
-    for key,val in app.legal_values.legal_numbers.items():
-        print(f"{key} | {val}")
-    print("________________________")

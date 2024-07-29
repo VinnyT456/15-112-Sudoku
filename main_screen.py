@@ -28,7 +28,7 @@ class Buttons:
         if (self.name == "Difficulty"):
             setActiveScreen('difficultyScreen')
         if (self.name == "Help"):
-            print("Help Clicked")
+            setActiveScreen('helpScreen')
 
 def initializeImage(app):
     positions = {
