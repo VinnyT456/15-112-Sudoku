@@ -1,5 +1,7 @@
 from cmu_graphics import *
 from PIL import Image
+import os
+import random
 
 class Buttons:
     def __init__(self,name,image,x_coord,y_coord,width,height):
@@ -14,25 +16,38 @@ class Buttons:
         #drawRect(self.x_coord+5,self.y_coord,self.width-10,self.height,fill=None)
         drawImage(self.image,self.x_coord,self.y_coord)
 
-    def checkButtonClick(self,x,y):
+    def checkButtonClick(self,app,x,y):
         left = self.x_coord
         right = self.x_coord+self.width
         top = self.y_coord
         bottom = self.y_coord+self.height
         if (left <= x <= right and top <= y <= bottom):
-            self.buttonAction()
+            self.buttonAction(app)
 
-    def buttonAction(self):
-        pass
+    def buttonAction(self,app):
+        app.difficulty = self.name.lower()
+    
+#Learned random.choice() from https://www.w3schools.com/python/ref_random_choice.asp
+def getBoards(app,difficulty):
+    boards = []
+    for filename in os.listdir('tp-starter-files/board-images'):
+        if filename.endswith('.png') and filename.startswith(f'{difficulty.lower()}'):
+            path = f'tp-starter-files/board-images/{filename}'
+            image = (Image.open(path))
+            image = CMUImage(image)
+            boards.append(image)
+    app.difficulty_boards[difficulty] = boards
 
-def initializeImage(app):
+def initializeImageBoard(app):
     positions = {
-        'Easy':(10,10,160,110),
-        "Medium":(180,10,160,110),
-        "Hard":(350,10,160,110),
-        "Expert":(520,10,160,110),
+        'Easy':(5,10,150,90),
+        "Medium":(165,10,150,90),
+        "Hard":(325,10,150,90),
+        "Expert":(485,10,150,90),
+        "Evil":(645,10,150,90)
     }
     for name in positions:
+        getBoards(app,name)
         image = (Image.open(f"button_image/{name}.png"))
         image = CMUImage(image)
         x_coord,y_coord,width,height = positions[name]
@@ -41,11 +56,19 @@ def initializeImage(app):
 #Copied from TP Resources Image Demos
 def difficultyScreen_onAppStart(app):
     app.difficulty_images = []
-    initializeImage(app)
+    app.difficulty_boards = {
+        'Easy':[],
+        'Medium':[],
+        'Hard':[],
+        'Expert':[],
+        'Evil':[]
+    }
+    app.difficulty = ''
+    initializeImageBoard(app)
 
 def difficultyScreen_onMousePress(app,mouseX,mouseY):
     for i in range(len(app.difficulty_images)):
-        app.difficulty_images[i].checkButtonClick(mouseX,mouseY)
+        app.difficulty_images[i].checkButtonClick(app,mouseX,mouseY)
     
 def difficultyScreen_onKeyPress(app,key):
     if (key == 'escape'):
