@@ -61,6 +61,8 @@ def gameScreen_onAppStart(app):
     app.legal_values = LegalValues(app.user_board)
     app.auto = False
     app.solve = False
+    app.manual = False
+    app.edit = False
     app.hints = sudokuHints(app.user_board)
     initializeBoard(app)
 
@@ -125,7 +127,7 @@ def drawCell(app,row,col):
             fill=app.board_color[row][col], border='black',
             borderWidth=app.cellBorderWidth)
     checkCell(app,row,col)
-    if (app.auto):
+    if (app.auto or app.manual):
         drawLegal(app,row,col)
     if (cell_number != 0):
         drawLabel(f'{cell_number}',cellLeft+44,cellTop+44,size=50)
@@ -168,7 +170,13 @@ def gameScreen_onKeyPress(app,key):
                 app.hint_col = None
     if (key == 'l'):
         app.auto = not app.auto
-    if (key == 'r'):
+        app.manual = False
+    if (key == 'm'):
+        app.manual = not app.manual
+        app.auto = False
+    if (key == 'e' and app.manual and not app.auto):
+        app.edit = not app.edit
+    if (key == 'n'):
         reset(app)
     if (key == 'h' and app.hint_row == None and app.hint_col == None):
         app.hint_row,app.hint_col,app.hint_val = app.hints.getHint()
