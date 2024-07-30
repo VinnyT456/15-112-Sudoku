@@ -34,9 +34,9 @@ class Buttons:
 #Learned Image.resize from https://www.geeksforgeeks.org/python-pil-image-resize-method/
 def getBoards(app,difficulty):
     boards = []
-    for filename in os.listdir('tp-starter-files/board-images'):
+    for filename in os.listdir('board images'):
         if filename.endswith('.png') and filename.startswith(f'{difficulty.lower()}'):
-            path = f'tp-starter-files/board-images/{filename}'
+            path = f'board images/{filename}'
             image = (Image.open(path))
             image = CMUImage(image)
             boards.append(image)
