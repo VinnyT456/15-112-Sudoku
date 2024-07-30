@@ -4,6 +4,8 @@ from main_screen import *
 from game_screen import *
 from difficulty_screen import *
 from help_screen import *
+from game_over_screen import *
+from congratulation_screen import *
 
 def main():
     runAppWithScreens(initialScreen='mainScreen',width=800,height=800)
