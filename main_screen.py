@@ -24,7 +24,7 @@ class Buttons:
 
     def buttonAction(self):
         if (self.name == "Start"):
-            setActiveScreen('gameScreen')
+            setActiveScreen('helpScreen')
         if (self.name == "Difficulty"):
             setActiveScreen('difficultyScreen')
         if (self.name == "Help"):
