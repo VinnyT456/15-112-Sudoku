@@ -49,6 +49,9 @@ def gameScreen_onAppStart(app):
     app.current_difficulty = app.difficulty if (app.difficulty != '') else 'evil'
     app.cellSelected = (None,None)
     app.rows = app.cols = 9
+    app.hint_row = None
+    app.hint_col = None
+    app.hint_val = 0
     app.cellBorderWidth = 1
     app.boardWidth = app.boardHeight = 790
     app.boardLeft = app.boardTop = 5
@@ -57,6 +60,8 @@ def gameScreen_onAppStart(app):
     app.user_board = sudokuBoard(copy.deepcopy(app.board))
     app.legal_values = LegalValues(app.user_board)
     app.auto = False
+    app.solve = False
+    app.hints = sudokuHints(app.user_board)
     initializeBoard(app)
 
 def gameScreen_onScreenActivate(app):
@@ -66,6 +71,7 @@ def gameScreen_onScreenActivate(app):
         app.solved_board = sudokuSolver(sudokuBoard(copy.deepcopy(app.board))).solveSudoku()
         app.user_board = sudokuBoard(copy.deepcopy(app.board))
         app.legal_values = LegalValues(app.user_board)
+        app.hints = sudokuHints(app.user_board)
         initializeBoard(app)
 
 def cellSelected(app,x,y):
@@ -104,6 +110,10 @@ def checkCell(app,row,col):
         app.board_color[row][col] = 'red'
     elif (app.board[row][col] == cell_number and app.board[row][col] != 0):
         app.board_color[row][col] = 'skyBlue'
+    elif (app.hint_row != None and app.hint_col != None and 
+        app.board[app.hint_row][app.hint_col] == 0 and
+        app.cellSelected != (app.hint_row,app.hint_col)):
+        app.board_color[app.hint_row][app.hint_col] = 'yellow'
     else:
         app.board_color[row][col] = None
 
@@ -138,23 +148,37 @@ def drawLegal(app,row,col):
             drawLabel(i,cellLeft+13+(30*((i-1)%3)),cellTop+15+(30*((i-1)//3)),size=20)
 
 def gameScreen_onKeyPress(app,key):
-    row,col = app.cellSelected
+    cell_row,cell_col = app.cellSelected
     if (key == 'escape'):
         setActiveScreen('mainScreen')
-    if (key == 'backspace' and (row,col) != (None,None)):
-        app.user_board.clearBoardValue(row,col)
-        app.board_color[row][col] = None
+    if (key == 'backspace' and (cell_row,cell_col) != (None,None)):
+        app.user_board.clearBoardValue(cell_row,cell_col)
+        app.board_color[cell_row][cell_col] = None 
+        if (app.hint_row != None and app.hint_col != None):
+            app.board_color[app.hint_row][app.hint_col] = 'yellow'
         app.legal_values.initializeLegalNumbers()
-    if (key.isdigit() and (row,col) != (None,None)):
+    if (key.isdigit() and (cell_row,cell_col) != (None,None)):
         key = int(key)
         if (1 <= key <= 9):
-            app.user_board.updateBoardValue(row,col,key)
-            checkCell(app,row,col)
+            app.user_board.updateBoardValue(cell_row,cell_col,key)
+            checkCell(app,cell_row,cell_col)
             app.legal_values.initializeLegalNumbers()
-    if (key == 'm'):
+            if (app.hint_row == cell_row and app.hint_col == cell_col):
+                app.hint_row = None
+                app.hint_col = None
+    if (key == 'l'):
         app.auto = not app.auto
     if (key == 'r'):
         reset(app)
+    if (key == 'h' and app.hint_row == None and app.hint_col == None):
+        app.hint_row,app.hint_col,app.hint_val = app.hints.getHint()
+        if (app.hint_row == None and app.hint_col == None and app.hint_val == set()):
+            return
+        app.board_color[app.hint_row][app.hint_col] = 'yellow'
+    if (key == 'a' and app.hint_row == None and app.hint_col == None):
+        app.hints.applyHint()
+        app.legal_values.initializeLegalNumbers()
+
 
 def drawBorder(app):
     drawRect(0,0,app.width,app.height,fill=None,border='black',borderWidth=10)
