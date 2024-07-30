@@ -93,7 +93,7 @@ class LegalValues:
 
     #Fewest Legal Moves and Most Legal Moves
     #Learned (sorted(key)) from https://www.geeksforgeeks.org/python-sorted-function/
-    #Learn items (dictionary) from https://www.w3schools.com/python/ref_dictionary_items.asp
+    #Learned items (dictionary) from https://www.w3schools.com/python/ref_dictionary_items.asp
     def sortLegalValues(self):
         numbers_available = sorted([self.legal_numbers[position] for position in self.legal_numbers],key=len)
         self.positions_available = []
@@ -148,15 +148,19 @@ class sudokuHints(LegalValues):
         pass
 
     def getHint(self):
-        row,col = self.positions_available[0]
-        if len(self.legal_numbers[(row,col)]) == 1:
-            self.positions_available.pop(0)
-            self.initializeLegalNumbers()
-            return row,col,self.legal_numbers[(row,col)]
+        self.initializeLegalNumbers()
+        if (self.positions_available != []):
+            row,col = self.positions_available.pop(0)
+            if len(self.legal_numbers[(row,col)]) == 1:
+                return row,col,self.legal_numbers[(row,col)].pop()
+            else:
+                self.positions_available.insert(0,(row,col))
+        return None,None,set()
 
     def applyHint(self):
         row,col,val = self.getHint()
-        self.puzzle.updateBoardValue(row,col,val)
+        if (row != None and col != None and val != set()):
+            self.puzzle.updateBoardValue(row,col,val)
     
 class sudokuSolver(LegalValues):
     def __init__(self,board):
