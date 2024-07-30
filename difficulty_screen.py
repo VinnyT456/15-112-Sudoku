@@ -82,6 +82,7 @@ def difficultyScreen_onKeyPress(app,key):
     if (key == 'escape'):
         setActiveScreen('mainScreen')
 
+#Copied from TP Resources Image Demo
 def difficultyScreen_redrawAll(app):
     for i in range(len(app.difficulty_images)):
         app.difficulty_images[i].drawButton()
