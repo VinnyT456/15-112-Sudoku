@@ -32,6 +32,7 @@ class Buttons:
     
 #Learned random.choice() from https://www.w3schools.com/python/ref_random_choice.asp
 #Learned Image.resize from https://www.geeksforgeeks.org/python-pil-image-resize-method/
+#Copied from TP Resources https://www.cs.cmu.edu/~112/notes/tp-resources.html
 def getBoards(app,difficulty):
     boards = []
     for filename in os.listdir('board images'):
@@ -42,6 +43,7 @@ def getBoards(app,difficulty):
             boards.append(image)
     app.difficulty_boards[difficulty] = boards
 
+#Copied from TP Resources Image Demos
 def initializeImageBoard(app):
     positions = {
         'Easy':(5,10,150,90),
@@ -57,7 +59,6 @@ def initializeImageBoard(app):
         x_coord,y_coord,width,height = positions[name]
         app.difficulty_images.append(Buttons(name,image,x_coord,y_coord,width,height))
 
-#Copied from TP Resources Image Demos
 def difficultyScreen_onAppStart(app):
     app.difficulty_images = []
     app.difficulty_boards = {

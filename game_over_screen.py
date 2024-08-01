@@ -1,6 +1,5 @@
 from cmu_graphics import *
 from game_over_screen import app
-
 from cmu_graphics import *
 from PIL import Image
 
@@ -17,6 +16,7 @@ class Buttons:
         drawRect(self.x_coord+5,self.y_coord,self.width,self.height,fill=None)
         drawImage(self.image,self.x_coord,self.y_coord)
 
+#Copied from TP Resources Image Demos
 def initializeImageBoard(app):
     positions = {
         'game over':(105,5,0.1,0.1),

@@ -17,6 +17,7 @@ class Buttons:
         drawRect(self.x_coord+5,self.y_coord,self.width,self.height,fill=None)
         drawImage(self.image,self.x_coord,self.y_coord)
 
+#Copied from TP Resources Image Demos
 def initializeImageBoard(app):
     positions = {
         'congratulations':(105,5,0.1,0.1),

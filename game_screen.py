@@ -5,13 +5,15 @@ from PIL import Image
 import math
 import copy
 import random
+import os
 
-
+#Copied From TP Resources https://www.cs.cmu.edu/~112/notes/tp-resources.html
 def readFile(path):
     with open(path, "rt") as f:
         return f.read()
     
 #Learned random.choice() from https://www.w3schools.com/python/ref_random_choice.asp
+#Copied from TP Resources https://www.cs.cmu.edu/~112/notes/tp-resources.html
 def getBoards(difficulty):
     boards = []
     for filename in os.listdir('boards'):
@@ -73,6 +75,7 @@ def gameScreen_onAppStart(app):
     app.game_over = False
     app.move = 0
     app.hints = sudokuHints(app.user_board)
+    app.wrong_legal_values = dict()
     initializeUserLegals(app)
     initializeBoard(app)
 
@@ -80,6 +83,7 @@ def gameScreen_onScreenActivate(app):
     if ((app.current_difficulty != app.difficulty and app.difficulty != '') or app.game_over): 
         reset(app)
 
+#Copied from https://academy.cs.cmu.edu/course
 def cellSelected(app,x,y):
     cellWidth,cellHeight = getCellSize(app)
     dx = x - app.boardLeft
@@ -99,11 +103,13 @@ def drawButtons(app):
     for i in range(len(app.game_images)):
         app.game_images[i].drawButton()
 
+#Copied from https://academy.cs.cmu.edu/course
 def getCellSize(app):
     cellWidth = app.boardWidth / app.cols
     cellHeight = app.boardHeight / app.rows
     return (cellWidth, cellHeight)
 
+#Copied from https://academy.cs.cmu.edu/course
 def getCellLeftTop(app,row,col):
     cellWidth, cellHeight = getCellSize(app)
     cellLeft = app.boardLeft + col * cellWidth
@@ -113,7 +119,7 @@ def getCellLeftTop(app,row,col):
 #Update the cell colors
 def checkCell(app,row,col):
     cell_number = app.user_board.getBoardValue(row,col)
-    if (cell_number != app.solved_board[row][col] and cell_number != 0):
+    if ((row,col) in app.wrong_legal_values and cell_number not in app.wrong_legal_values[(row,col)]):
         app.board_color[row][col] = 'red'
     elif (app.board[row][col] == cell_number and app.board[row][col] != 0):
         app.board_color[row][col] = 'skyBlue'
@@ -128,6 +134,7 @@ def checkCell(app,row,col):
         row,col = app.cellSelected
         app.board_color[row][col] = 'deepSkyBlue'
 
+#Copied from https://academy.cs.cmu.edu/course
 def drawCell(app,row,col):
     cellWidth,cellHeight = getCellSize(app)
     cellLeft,cellTop = getCellLeftTop(app,row,col)
@@ -142,7 +149,7 @@ def drawCell(app,row,col):
     if (cell_number != 0):
         drawLabel(f'{cell_number}',cellLeft+44,cellTop+44,size=50)
     
-
+#Copied from https://academy.cs.cmu.edu/course
 def drawGrid(app):
     for row in range(app.rows):
         for col in range(app.cols): 
@@ -170,8 +177,10 @@ def gameScreen_onKeyPress(app,key):
     cell_row,cell_col = app.cellSelected
     if (key == 'escape'):
         setActiveScreen('mainScreen')
-
+    #Copied del from https://www.geeksforgeeks.org/python-ways-to-remove-a-key-from-dictionary/
     if (key == 'backspace' and (cell_row,cell_col) != (None,None)):
+        if ((cell_row,cell_col) in app.wrong_legal_values):
+            del app.wrong_legal_values[(cell_row,cell_col)]
         if (app.edit):
             app.user_legal_values[(cell_row,cell_col)] = set()
             return
@@ -185,6 +194,9 @@ def gameScreen_onKeyPress(app,key):
         key = int(key)
         if (1 <= key <= 9):
             if (not app.edit):
+                if ((cell_row,cell_col) in app.legal_values.legal_numbers and
+                    key not in app.legal_values.legal_numbers[(cell_row,cell_col)]):
+                    app.wrong_legal_values[(cell_row,cell_col)] = app.legal_values.legal_numbers[(cell_row,cell_col)].copy()
                 app.user_board.updateBoardValue(cell_row,cell_col,key)
                 checkCell(app,cell_row,cell_col)
                 app.legal_values.initializeLegalNumbers()
@@ -243,7 +255,6 @@ def gameOver(app):
                 return
     setActiveScreen('congratulationScreen')
     
-
 def drawBorder(app):
     drawRect(0,0,app.width,app.height,fill=None,border='black',borderWidth=10)
     cellWidth,cellHeight = getCellSize(app)
